@@ -1,0 +1,28 @@
+name: e3_failures
+description: >
+  E3 - Agent failures. A sensor or the decision node crashes abruptly at sim
+  t=1000 s (during the first attack), optionally restarting 900 sim-s later
+  (pending messages are recovered from the broker). 'coordinator' targets
+  intel-0 (cooperative) or central-0 (centralized); it has no effect on the
+  independent strategy, which has no coordinator.
+seeds: [100, 101, 102, 103, 104, 105, 106, 107, 108, 109]
+base:
+  duration: 7200
+  train_duration: 28800
+  approver: {approve_prob: 1.0, latency_s: 0.05}
+  scenarios:
+    - {type: credential_compromise, params: {start: 600, duration: 1500}}
+    - {type: lateral_movement, params: {start: 2400, duration: 1800}}
+    - {type: configuration_tampering, params: {start: 4500, duration: 1500}}
+grid:
+  failure: [none, auth_sensor, network_sensor, coordinator, coordinator_restart]
+  strategy: [independent, cooperative, centralized]
+presets:
+  failure:
+    none: {failures: []}
+    auth_sensor: {failures: [{agent: auth-0, at: 1000}]}
+    network_sensor: {failures: [{agent: net-0, at: 1000}]}
+    coordinator: {failures: [{agent: intel-0, at: 1000}, {agent: central-0, at: 1000}]}
+    coordinator_restart:
+      failures: [{agent: intel-0, at: 1000, restart_after: 900}, {agent: central-0, at: 1000, restart_after: 900}]
+x: failure

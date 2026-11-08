@@ -1,0 +1,27 @@
+name: e5_partition
+description: >
+  E5 - Partial network disconnection and message loss. 'net_partitioned' /
+  'auth_partitioned' drop every message the network (auth) sensors publish to
+  alert and directed topics (they keep observing but cannot be heard);
+  loss_X drops X% of all inter-agent messages uniformly at random.
+seeds: [100, 101, 102, 103, 104, 105, 106, 107, 108, 109]
+base:
+  duration: 7200
+  train_duration: 28800
+  approver: {approve_prob: 1.0, latency_s: 0.05}
+  scenarios:
+    - {type: credential_compromise, params: {start: 600, duration: 1500}}
+    - {type: lateral_movement, params: {start: 2400, duration: 1800}}
+    - {type: configuration_tampering, params: {start: 4500, duration: 1500}}
+grid:
+  network: [none, net_partitioned, auth_partitioned, loss_10, loss_30, loss_50]
+  strategy: [independent, cooperative]
+presets:
+  network:
+    none: {}
+    net_partitioned: {conditions.partitions: [{senders: ["net-*"], topics: ["alerts.*", "agent.*"]}]}
+    auth_partitioned: {conditions.partitions: [{senders: ["auth-*"], topics: ["alerts.*", "agent.*"]}]}
+    loss_10: {conditions.loss_prob: 0.1, conditions.seed: 7}
+    loss_30: {conditions.loss_prob: 0.3, conditions.seed: 7}
+    loss_50: {conditions.loss_prob: 0.5, conditions.seed: 7}
+x: network

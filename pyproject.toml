@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "multi-agent-cyber-defense"
+version = "0.1.0"
+description = "Research prototype: distributed multi-agent cyber defense over a simulated critical-infrastructure environment"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "pydantic>=2.5",
+    "numpy>=1.26",
+    "pandas>=2.1",
+    "scikit-learn>=1.3",
+    "scipy>=1.11",
+    "pyyaml>=6.0",
+    "fastapi>=0.110",
+    "httpx>=0.27",
+    "plotly>=5.18",
+]
+
+[project.optional-dependencies]
+redis = ["redis>=5.0"]
+server = ["uvicorn[standard]>=0.27"]
+dashboard = ["streamlit>=1.32"]
+monitoring = ["psutil>=5.9"]
+dev = ["pytest>=7.4"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+addopts = "-q"
+markers = [
+    "redis: requires a reachable Redis server (REDIS_URL)",
+    "slow: end-to-end simulation tests",
+]

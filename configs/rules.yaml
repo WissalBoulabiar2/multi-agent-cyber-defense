@@ -1,0 +1,114 @@
+# Rule-based detections. Confidence = prior probability that a match is malicious,
+# set by hand (documented assumption, not learned). Feature names: see
+# src/mcd/detection/features/*.py
+rules:
+  # ------------------------------------------------------------ network
+  - id: NET-001
+    domain: network
+    alert_type: NETWORK.NEW_ADMIN_FANOUT
+    tactic: lateral_movement
+    confidence: 0.45
+    description: "connections on admin ports to >=2 hosts never contacted before on those ports"
+    all: [[new_admin_pairs, ">=", 2]]
+  - id: NET-002
+    domain: network
+    alert_type: NETWORK.CRITICALITY_JUMP
+    tactic: lateral_movement
+    confidence: 0.55
+    description: "new admin-port access towards a more critical segment"
+    all: [[crit_jump, ">=", 1], [new_admin_pairs, ">=", 1]]
+  - id: NET-003
+    domain: network
+    alert_type: NETWORK.PORT_SWEEP
+    tactic: discovery
+    confidence: 0.35
+    description: "many distinct destination ports, mostly failing"
+    all: [[uniq_ports, ">=", 4], [failed_ratio, ">=", 0.5]]
+  - id: NET-004
+    domain: network
+    alert_type: NETWORK.HOST_SWEEP
+    tactic: discovery
+    confidence: 0.35
+    description: "failed connections to many new hosts"
+    all: [[new_pairs, ">=", 3], [failed_ratio, ">=", 0.4]]
+
+  # --------------------------------------------------------------- auth
+  - id: AUTH-001
+    domain: auth
+    alert_type: AUTH.BRUTE_FORCE
+    tactic: credential_access
+    confidence: 0.5
+    description: ">=8 failed logins within the memory window"
+    all: [[recent_fail, ">=", 8]]
+  - id: AUTH-002
+    domain: auth
+    alert_type: AUTH.SUCCESS_AFTER_FAILURES
+    tactic: credential_access
+    confidence: 0.7
+    description: "successful login after >=5 recent failures"
+    all: [[success_after_fail, ">=", 1]]
+  - id: AUTH-003
+    domain: auth
+    alert_type: AUTH.PRIVILEGED_NOVEL_SOURCE
+    tactic: credential_access
+    confidence: 0.5
+    description: "privileged account used from a never-seen source host"
+    all: [[privileged, "==", 1], [novel_src, ">=", 1]]
+  - id: AUTH-004
+    domain: auth
+    alert_type: AUTH.NOVEL_CRITICAL_ACCESS
+    tactic: lateral_movement
+    confidence: 0.5
+    description: "successful login to a never-used destination of criticality >= 2"
+    all: [[novel_dst_crit, ">=", 2]]
+  - id: AUTH-005
+    domain: auth
+    alert_type: AUTH.OFF_HOURS_NOVEL
+    tactic: credential_access
+    confidence: 0.4
+    description: "off-hours activity towards new destinations"
+    all: [[off_hours, ">=", 0.5], [novel_dst, ">=", 1]]
+
+  # ------------------------------------------------------------- config
+  - id: CFG-001
+    domain: config
+    alert_type: CONFIG.UNTICKETED_CRITICAL_CHANGE
+    tactic: persistence
+    confidence: 0.5
+    description: "security-critical key changed without change ticket"
+    all: [[critical_unticketed, ">=", 1]]
+  - id: CFG-002
+    domain: config
+    alert_type: CONFIG.UNAUTHORIZED_PRIVILEGE_GRANT
+    tactic: privilege_escalation
+    confidence: 0.75
+    description: "privilege grant without change ticket"
+    all: [[unticketed_priv, ">=", 1]]
+  - id: CFG-003
+    domain: config
+    alert_type: CONFIG.CHANGE_FROM_NOVEL_SOURCE
+    tactic: privilege_escalation
+    confidence: 0.6
+    description: "unticketed change by an actor working from an unusual host"
+    all: [[novel_actor_src, ">=", 1], [n_unticketed, ">=", 1]]
+  - id: CFG-004
+    domain: config
+    alert_type: CONFIG.DRIFT
+    tactic: persistence
+    confidence: 0.45
+    description: ">=3 keys drifted from baseline"
+    all: [[drift_keys, ">=", 3]]
+  - id: CFG-005
+    domain: config
+    alert_type: CONFIG.AUDIT_DISABLED
+    tactic: defense_evasion
+    confidence: 0.96
+    description: "audit policy disabled without ticket (high-fidelity signature)"
+    all: [[audit_disabled, ">=", 1]]
+  - id: CFG-006
+    domain: config
+    alert_type: CONFIG.UNKNOWN_ACTOR
+    tactic: privilege_escalation
+    confidence: 0.8
+    description: "configuration changed by a non-administrative account"
+    all: [[unknown_actor, ">=", 1]]

@@ -1,0 +1,25 @@
+name: e4_delay
+description: >
+  E4 - Communication delay. Fixed delay (+-20% jitter) injected on every
+  inter-agent topic. The environment is paced at speedup=600 (1 sim-minute =
+  0.1 wall-s), so a wall delay d corresponds to roughly 600*d sim-seconds.
+  For the centralized baseline the delay is also applied to raw-event ingestion
+  (edge -> centre), which is the transfer it depends on.
+seeds: [100, 101, 102, 103, 104]
+central_ingest_conditions: true
+base:
+  duration: 5400
+  train_duration: 28800
+  speedup: 600
+  approver: {approve_prob: 1.0, latency_s: 0.05}
+  scenarios: [{type: multi_stage}]
+grid:
+  delay: [d0, d100, d500, d2000]
+  strategy: [independent, cooperative, centralized]
+presets:
+  delay:
+    d0: {conditions.delay_ms: 0, conditions.jitter_ms: 0}
+    d100: {conditions.delay_ms: 100, conditions.jitter_ms: 20}
+    d500: {conditions.delay_ms: 500, conditions.jitter_ms: 100}
+    d2000: {conditions.delay_ms: 2000, conditions.jitter_ms: 400}
+x: delay

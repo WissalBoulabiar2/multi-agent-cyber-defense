@@ -1,0 +1,23 @@
+name: e2_scalability
+description: >
+  E2 - Scalability. N sensor agents (2, 4, 8, 16) assigned round-robin to the
+  network/auth/config domains, entities sharded by crc32. The infrastructure is
+  scaled with N (topology.scale = N/4, min 0.5) so per-agent load stays roughly
+  constant. At N=2 there is no configuration agent (scenario C cannot be seen
+  by config rules). Coordinator and response agent are counted separately.
+seeds: [100, 101, 102, 103, 104, 105, 106, 107, 108, 109]
+base:
+  duration: 7200
+  train_duration: 28800
+  scale_topology_with_sensors: true
+  approver: {approve_prob: 1.0, latency_s: 0.05}
+grid:
+  n_sensors: [2, 4, 8, 16]
+  strategy: [independent, cooperative]
+  scenario: [mixed]
+scenario_presets:
+  mixed:
+    - {type: credential_compromise, params: {start: 600, duration: 1500}}
+    - {type: lateral_movement, params: {start: 2400, duration: 1800}}
+    - {type: configuration_tampering, params: {start: 4500, duration: 1500}}
+x: n_sensors

@@ -1,0 +1,15 @@
+name: e1_strategies
+description: >
+  E1 - Does cooperation help? Independent vs cooperative vs centralized decision
+  making on each attack scenario (A credential compromise, B lateral movement,
+  C configuration tampering, and the A->B->C multi-stage campaign), with
+  identical detectors and identical event streams per seed (paired design).
+seeds: [100, 101, 102, 103, 104, 105, 106, 107, 108, 109]
+base:
+  duration: 5400
+  train_duration: 28800
+  approver: {approve_prob: 1.0, latency_s: 0.05}
+grid:
+  scenario: [credential_compromise, lateral_movement, configuration_tampering, multi_stage]
+  strategy: [independent, cooperative, centralized]
+x: scenario

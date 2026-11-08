@@ -1,0 +1,66 @@
+# Distributed deployment: one container per agent, communicating only through Redis Streams.
+#   docker compose up --build                       # cooperative strategy, 5 agents + env
+#   docker compose --profile ui up --build          # + API and dashboard (embedded in-memory simulation)
+x-agent: &agent
+  build: .
+  image: mcd:latest
+  environment:
+    REDIS_URL: redis://redis:6379/0
+    MCD_CONFIG: /app/configs/system.yaml
+  depends_on:
+    redis:
+      condition: service_healthy
+  volumes:
+    - ./results:/app/results
+  restart: "no"
+
+services:
+  redis:
+    image: redis:7.2-alpine
+    command: ["redis-server", "--appendonly", "no"]
+    ports: ["6379:6379"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      timeout: 2s
+      retries: 20
+
+  agent-network:
+    <<: *agent
+    command: ["python", "-m", "mcd.runtime.launch", "--role", "sensor", "--domain", "network", "--shard", "0"]
+  agent-auth:
+    <<: *agent
+    command: ["python", "-m", "mcd.runtime.launch", "--role", "sensor", "--domain", "auth", "--shard", "0"]
+  agent-config:
+    <<: *agent
+    command: ["python", "-m", "mcd.runtime.launch", "--role", "sensor", "--domain", "config", "--shard", "0"]
+  agent-intel:
+    <<: *agent
+    command: ["python", "-m", "mcd.runtime.launch", "--role", "intel"]
+  agent-response:
+    <<: *agent
+    command: ["python", "-m", "mcd.runtime.launch", "--role", "response", "--output", "/app/results/live"]
+  operator-stub:
+    <<: *agent
+    command: ["python", "-m", "mcd.runtime.launch", "--role", "approver"]
+  environment:
+    <<: *agent
+    environment:
+      REDIS_URL: redis://redis:6379/0
+      MCD_CONFIG: /app/configs/system.yaml
+      START_DELAY: "30"   # let agents finish local training first
+    command: ["python", "-m", "mcd.runtime.launch", "--role", "env", "--output", "/app/results/live"]
+
+  api:
+    <<: *agent
+    profiles: ["ui"]
+    command: ["uvicorn", "mcd.api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+    ports: ["8000:8000"]
+  dashboard:
+    <<: *agent
+    profiles: ["ui"]
+    environment:
+      API_URL: http://api:8000
+    command: ["streamlit", "run", "dashboard/app.py", "--server.port", "8501", "--server.address", "0.0.0.0"]
+    ports: ["8501:8501"]
+    depends_on: [api]

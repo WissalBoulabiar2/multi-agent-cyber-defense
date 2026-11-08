@@ -1,0 +1,12 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.venv/
+venv/
+.env
+.claude/
+# experiment outputs are regenerated with `python -m mcd.evaluation.experiments --all`
+results/
+results_run.log
+*.log

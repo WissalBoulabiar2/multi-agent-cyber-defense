@@ -1,0 +1,28 @@
+name: e8_ablation
+description: >
+  E8 - Ablation of the cooperative strategy: remove one detector component or
+  one coordination mechanism at a time.
+seeds: [100, 101, 102, 103, 104, 105, 106, 107, 108, 109]
+base:
+  strategy: cooperative
+  duration: 7200
+  train_duration: 28800
+  approver: {approve_prob: 1.0, latency_s: 0.05}
+  scenarios:
+    - {type: credential_compromise, params: {start: 600, duration: 1500}}
+    - {type: lateral_movement, params: {start: 2400, duration: 1800}}
+    - {type: configuration_tampering, params: {start: 4500, duration: 1500}}
+grid:
+  variant: [full, no_iforest, no_lof, no_stat, rules_only, ml_only, no_voi, no_advisories, no_killchain]
+presets:
+  variant:
+    full: {}
+    no_iforest: {sensor.pipeline.components: [lof, stat]}
+    no_lof: {sensor.pipeline.components: [iforest, stat]}
+    no_stat: {sensor.pipeline.components: [iforest, lof]}
+    rules_only: {sensor.pipeline.components: []}
+    ml_only: {sensor.pipeline.use_rules: false}
+    no_voi: {fusion.voi: false}
+    no_advisories: {fusion.advisories: false}
+    no_killchain: {fusion.gamma: 1.0, fusion.min_stages: 1}
+x: variant

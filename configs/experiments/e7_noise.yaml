@@ -1,0 +1,24 @@
+name: e7_noise
+description: >
+  E7 - Noisy input. Multiplicative log-normal noise on numeric flow attributes
+  plus random benign bursts (new-pair traffic, failed logins) injected with
+  probability p per step.
+seeds: [100, 101, 102, 103, 104, 105, 106, 107, 108, 109]
+base:
+  duration: 7200
+  train_duration: 28800
+  approver: {approve_prob: 1.0, latency_s: 0.05}
+  scenarios:
+    - {type: credential_compromise, params: {start: 600, duration: 1500}}
+    - {type: lateral_movement, params: {start: 2400, duration: 1800}}
+    - {type: configuration_tampering, params: {start: 4500, duration: 1500}}
+grid:
+  noise: [none, low, medium, high]
+  strategy: [independent, cooperative, centralized]
+presets:
+  noise:
+    none: {channel.noise_sigma: 0.0, channel.benign_burst_prob: 0.0}
+    low: {channel.noise_sigma: 0.1, channel.benign_burst_prob: 0.1}
+    medium: {channel.noise_sigma: 0.3, channel.benign_burst_prob: 0.3}
+    high: {channel.noise_sigma: 0.6, channel.benign_burst_prob: 0.6}
+x: noise

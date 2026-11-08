@@ -1,0 +1,23 @@
+# Default configuration for the distributed (one process per agent) deployment.
+# Every field maps to mcd.runtime.system.SystemConfig.
+strategy: cooperative
+seed: 1
+train_seed: 0
+train_duration: 28800      # 8 h of benign history per agent (own shard only)
+duration: 5400             # 90 simulated minutes
+speedup: 60                # 1 sim-minute per wall-second
+shards: {network: 1, auth: 1, config: 1}
+scenarios:
+  - {type: multi_stage, params: {start: 900, duration: 2400}}
+sensor:
+  tau_act: 0.7
+  policy: {share_threshold: 0.45, suppression_window: 300, rate_msgs_per_s: 50, burst: 100, max_bytes: 16384}
+fusion:
+  tau_suspect: 0.45
+  tau_confirm: 0.75
+  tau_high: 0.9
+  half_life: 900
+  gamma: 0.7
+response:
+  approval_timeout_s: 120
+approver: {approve_prob: 1.0, latency_s: 2.0}
